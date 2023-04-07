@@ -1,20 +1,7 @@
-export interface INoticias {
-  id: number;
-  titulo: string;
-  descripcion: string;
-  fecha: Date;
-  esPremium: boolean;
-  imagen: string;
-}
+import { INoticias } from "./types";
+import { simularTiempoTranscurrido } from "./utils";
 
-const simularTiempoTranscurrido: (decrementMiliseconds: number) => Date = (
-  decrementMiliseconds
-) => {
-  let time = new Date();
-  time.setMilliseconds(time.getMilliseconds() - decrementMiliseconds);
-  return time;
-};
-
+// Datos simulados de noticias.
 const data = [
   {
     id: 1,

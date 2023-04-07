@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { SuscribeImage, CloseButton as Close } from "../../assets";
-import { obtenerNoticias } from "./fakeRest";
+import Noticia from "./Noticia";
+import { INoticiasNormalizadas } from "./types";
+import INoticiasProvider from "./NoticiasProvider";
 import {
   CloseButton,
   TarjetaModal,
@@ -21,67 +23,59 @@ import {
   CotenedorTexto,
 } from "./styled";
 
-export interface INoticiasNormalizadas {
-  id: number;
-  titulo: string;
-  descripcion: string;
-  fecha: number | string;
-  esPremium: boolean;
-  imagen: string;
-  descripcionCorta?: string;
-}
+/**
+ * Componente para mostrar una lista de noticias y ver mas detalles de cada una en un modal.
+ * @param {Object} props - Propiedades del componente.
+ * @param {INoticiasProvider} props.noticiasProvider - Proveedor de noticias.
+ */
 
-const Noticias = () => {
+const Noticias = ({ noticiasProvider }: { noticiasProvider: INoticiasProvider }) => {
   const [noticias, setNoticias] = useState<INoticiasNormalizadas[]>([]);
   const [modal, setModal] = useState<INoticiasNormalizadas | null>(null);
 
+/**
+* Función para obtener informacion de las noticias.
+* @function
+*/
+
+const obtenerInformacionNoticias = useCallback(async () => {
+  const noticiasApi = await noticiasProvider.obtenerNoticias();
+  const noticiasNormalizadas = noticiasApi.map((noticia) => Noticia(noticia));
+  setNoticias(noticiasNormalizadas);
+}, [noticiasProvider]);
+
   useEffect(() => {
-    const obtenerInformacion = async () => {
-      const respuesta = await obtenerNoticias();
-
-      const data = respuesta.map((n) => {
-        const titulo = n.titulo
-          .split(" ")
-          .map((str) => {
-            return str.charAt(0).toUpperCase() + str.slice(1);
-          })
-          .join(" ");
-
-        const ahora = new Date();
-        const minutosTranscurridos = Math.floor(
-          (ahora.getTime() - n.fecha.getTime()) / 60000
-        );
-
-        return {
-          id: n.id,
-          titulo,
-          descripcion: n.descripcion,
-          fecha: `Hace ${minutosTranscurridos} minutos`,
-          esPremium: n.esPremium,
-          imagen: n.imagen,
-          descripcionCorta: n.descripcion.substring(0, 100),
-        };
-      });
-
-      setNoticias(data);
+    const actualizarNoticias = async () => {
+      await obtenerInformacionNoticias();
     };
+    actualizarNoticias();
+  }, [obtenerInformacionNoticias]);
 
-    obtenerInformacion();
-  }, []);
+  /**
+ * Función para suscripcion newsletter.
+ * @function
+ */
+
+const handleSubscribe = () => {
+  setTimeout(() => {
+    alert("Sucripto!");
+    setModal(null);
+  }, 1000);
+};
 
   return (
     <ContenedorNoticias>
       <TituloNoticias>Noticias de los Simpsons</TituloNoticias>
       <ListaNoticias>
-        {noticias.map((n) => (
+        {noticias.map((noticia) => (
           <TarjetaNoticia>
-            <ImagenTarjetaNoticia src={n.imagen} />
-            <TituloTarjetaNoticia>{n.titulo}</TituloTarjetaNoticia>
-            <FechaTarjetaNoticia>{n.fecha}</FechaTarjetaNoticia>
+            <ImagenTarjetaNoticia src={noticia.imagen} />
+            <TituloTarjetaNoticia>{noticia.titulo}</TituloTarjetaNoticia>
+            <FechaTarjetaNoticia>{noticia.fecha.toLocaleString()}</FechaTarjetaNoticia>
             <DescripcionTarjetaNoticia>
-              {n.descripcionCorta}
+              {noticia.descripcionCorta}
             </DescripcionTarjetaNoticia>
-            <BotonLectura onClick={() => setModal(n)}>Ver más</BotonLectura>
+            <BotonLectura onClick={() => setModal(noticia)}>Ver más</BotonLectura>
           </TarjetaNoticia>
         ))}
         {modal ? (
@@ -99,12 +93,7 @@ const Noticias = () => {
                     nuestros personajes favoritos.
                   </DescripcionModal>
                   <BotonSuscribir
-                    onClick={() =>
-                      setTimeout(() => {
-                        alert("Suscripto!");
-                        setModal(null);
-                      }, 1000)
-                    }
+                    onClick={handleSubscribe}
                   >
                     Suscríbete
                   </BotonSuscribir>

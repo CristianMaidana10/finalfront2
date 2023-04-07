@@ -5,6 +5,12 @@ import {
   NO_ENCONTRADO,
 } from "./constants";
 
+/**
+ * Retorna un mensaje en base al estado de la peticion y la cita obtenida.
+ * @param {string} cita - Cita obtenida 
+ * @param {ESTADO_FETCH} estadoPedido - El estado de la peticion.
+ * @returns {string} - Devuelve el mensaje del estado y cita obtenido.
+ */
 export const obtenerMensaje: (
   cita: string,
   estadoPedido: ESTADO_FETCH
